@@ -32,6 +32,8 @@ struct Plugin {
 		// Checks if there are any duplicate dependencies. E.g. the same dependency in both required and conflicted.
 		bool IsValid() const;
 
+		// The game version to match against. *'s can be used as placeholders, such as in 0.* to match any 0. game version.
+		std::string gameVersion;
 		// The plugins, if any, which are required by this plugin.
 		std::set<std::string> required;
 		// The plugins, if any, which are designed to work with this plugin but aren't required.
@@ -43,12 +45,19 @@ struct Plugin {
 	// Checks whether this plugin is valid, i.e. whether it exists.
 	bool IsValid() const;
 
-	// The name that identifies this plugin.
-	std::string name;
 	// The path to the plugin's folder.
 	std::string path;
+	// The name that identifies this plugin.
+	std::string name;
 	// The about text, if any, of this plugin.
 	std::string aboutText;
+	// The version of the plugin as defined by the authors.
+	std::string version;
+
+	// A set of tags which describe what categories the plugin fits into.
+	std::set<std::string> tags;
+	// The set of people who created the plugin.
+	std::set<std::string> authors;
 
 	// Other plugins which are required for, optional for, or conflict with this plugin.
 	PluginDependencies dependencies;
