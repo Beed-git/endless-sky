@@ -115,7 +115,9 @@ const Plugin *Plugins::Load(const string &path)
 
 	string pluginFile = path + "plugin.txt";
 	string aboutText;
-
+	string version;
+	set<string> authors;
+	set<string> tags;
 	Plugin::PluginDependencies dependencies;
 
 	// Load plugin metadata from plugin.txt.
@@ -129,16 +131,32 @@ const Plugin *Plugins::Load(const string &path)
 		}
 		else if(child.Token(0) == "about" && child.Size() >= 2)
 			aboutText = child.Token(1);
-		// Dependencies.
-		else if(child.Token(0) == "requires")
+		else if(child.Token(0) == "authors")
 			for(const DataNode &grand : child)
-				dependencies.required.insert(grand.Token(0));
-		else if(child.Token(0) == "optional")
+				authors.insert(grand.Token(0));
+		else if(child.Token(0) == "tags")
 			for(const DataNode &grand : child)
-				dependencies.optional.insert(grand.Token(0));
-		else if(child.Token(0) == "conflicts")
+				tags.insert(grand.Token(0));
+				
+		if(child.Token(0) == "dependencies")
+		{
 			for(const DataNode &grand : child)
-				dependencies.conflicted.insert(grand.Token(0));
+			{
+				if(grand.Token(0) == "game version")
+					dependencies.gameVersion = grand.Token(1);
+				else if(grand.Token(0) == "requires")
+					for(const DataNode &great : grand)
+						dependencies.required.insert(great.Token(0));
+				else if(grand.Token(0) == "optional")
+					for(const DataNode &great : grand)
+						dependencies.optional.insert(great.Token(0));
+				else if(grand.Token(0) == "conflicts")
+					for(const DataNode &great : grand)
+						dependencies.conflicted.insert(great.Token(0));
+				else
+					grand.PrintTrace("Skipping unrecognized attribute:");
+			}
+		}
 		else
 			child.PrintTrace("Skipping unrecognized attribute:");
 	}
@@ -157,6 +175,7 @@ const Plugin *Plugins::Load(const string &path)
 		return nullptr;
 	}
 
+	// If dependencies aren't valid throw an error.
 	if(!dependencies.IsValid())
 	{
 		Logger::LogError("Warning: Skipping plugin located at \"" + path
@@ -164,10 +183,20 @@ const Plugin *Plugins::Load(const string &path)
 		return nullptr;
 	}
 
+	// If the game version isn't set we'll assume it works for the current version.
+	if(dependencies.gameVersion.empty())
+	{
+		// TODO: Get game version from somewhere else.
+		dependencies.gameVersion = "0.10.5-alpha";
+	}
+
 	plugin->name = std::move(name);
 	plugin->path = path;
 	// Read the deprecated about.txt content if no about text was specified.
 	plugin->aboutText = aboutText.empty() ? Files::Read(path + "about.txt") : std::move(aboutText);
+	plugin->version = version.empty() ? "1.0" : version;
+	plugin->authors = authors;
+	plugin->tags = tags;
 	plugin->dependencies = dependencies;
 
 	return plugin;
