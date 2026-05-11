@@ -16,8 +16,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include "supplier/AudioSupplier.h"
+#include "../Files.h"
 
-#include <filesystem>
 #include <memory>
 
 // The Music class streams audio from a file and delivers it to the program
@@ -27,7 +27,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 // so the game won't freeze if the music stops for some reason.
 class Music {
 public:
-	static void Init(const std::vector<std::filesystem::path> &sources);
+	static void Init(const std::vector<ContentSource> &sources);
 
 	static std::unique_ptr<AudioSupplier> CreateSupplier(const std::string &name, bool looping);
 

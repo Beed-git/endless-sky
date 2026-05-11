@@ -68,7 +68,7 @@ MenuPanel::MenuPanel(PlayerInfo &player, UI &gamePanels)
 	{
 		for(const auto &source : GameData::Sources())
 		{
-			auto credit = Format::Split(Files::Read(source / "credits.txt"), "\n");
+			auto credit = Format::Split(Files::Read(source.resourcePath / "credits.txt"), "\n");
 			if((credit.size() > 1) || !credit.front().empty())
 			{
 				credits.insert(credits.end(), credit.begin(), credit.end());
@@ -76,7 +76,8 @@ MenuPanel::MenuPanel(PlayerInfo &player, UI &gamePanels)
 			}
 		}
 		// Remove the last 15 lines, as there is already a gap at the beginning of the credits.
-		credits.resize(credits.size() - 15);
+		if (credits.size() >= 15)
+			credits.resize(credits.size() - 15);
 	}
 	else if(showCreditsWarning)
 	{

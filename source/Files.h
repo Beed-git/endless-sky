@@ -20,6 +20,17 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 
+struct ContentSource
+{
+	std::filesystem::path resourcePath;
+	std::filesystem::path dataPath;
+	std::filesystem::path imagePath;
+	std::filesystem::path soundPath;
+	std::filesystem::path shaderPath;
+};
+
+
+
 // File paths and file handling are different on each operating system. This
 // class stores the path, on each operating system, to the game's resources -
 // images, data files, etc. - and also to the "configuration" directory where
@@ -35,9 +46,6 @@ public:
 	// The user-specific configuration directory, or whichever directory was passed on the command line via `--config`
 	static const std::filesystem::path &Config();
 
-	static const std::filesystem::path &Data();
-	static const std::filesystem::path &Images();
-	static const std::filesystem::path &Sounds();
 	static const std::filesystem::path &Saves();
 	static const std::filesystem::path &Pilots();
 	static const std::filesystem::path &UserPlugins();

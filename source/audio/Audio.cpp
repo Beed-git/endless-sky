@@ -115,7 +115,7 @@ namespace {
 
 
 // Begin loading sounds (in a separate thread).
-void Audio::Init(const vector<filesystem::path> &sources)
+void Audio::Init(const vector<ContentSource> &sources)
 {
 	device = alcOpenDevice(nullptr);
 	if(!device)
@@ -147,11 +147,11 @@ void Audio::Init(const vector<filesystem::path> &sources)
 
 
 // Get all the sound files in the game data and all plugins.
-void Audio::LoadSounds(const vector<filesystem::path> &sources)
+void Audio::LoadSounds(const vector<ContentSource> &sources)
 {
 	for(const auto &source : sources)
 	{
-		filesystem::path root = source / "sounds";
+		filesystem::path root = source.soundPath;
 		vector<filesystem::path> files = Files::RecursiveList(root);
 		for(const auto &path : files)
 		{

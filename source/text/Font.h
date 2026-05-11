@@ -39,6 +39,7 @@ public:
 	Font() noexcept = default;
 	explicit Font(const std::filesystem::path &imagePath);
 
+	bool IsLoaded() const;
 	void Load(const std::filesystem::path &imagePath);
 
 	// Draw a text string, subject to the given layout and truncation strategy.
@@ -91,4 +92,6 @@ private:
 	static const int GLYPHS = 98;
 	int advance[GLYPHS * GLYPHS] = {};
 	int widthEllipses = 0;
+
+	bool loaded = false;
 };

@@ -244,6 +244,7 @@ int main(int argc, char *argv[])
 		if(!isTesting || debugMode)
 		{
 			GameData::LoadShaders();
+			GameData::LoadFonts();
 
 			// Show something other than a blank window.
 			GameWindow::Step();

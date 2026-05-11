@@ -15,9 +15,9 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../Files.h"
 #include "SoundCategory.h"
 
-#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -36,8 +36,8 @@ class Sound;
 class Audio {
 public:
 	// Begin loading sounds (in a separate thread).
-	static void Init(const std::vector<std::filesystem::path> &sources);
-	static void LoadSounds(const std::vector<std::filesystem::path> &sources);
+	static void Init(const std::vector<ContentSource> &sources);
+	static void LoadSounds(const std::vector<ContentSource> &sources);
 	static void CheckReferences(bool parseOnly = false);
 
 	// Report the progress of loading sounds.

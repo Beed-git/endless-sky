@@ -1,0 +1,3 @@
+name "Endless Sky"
+about "This is the base game content for Endless Sky!"
+version "0.11.2-alpha"

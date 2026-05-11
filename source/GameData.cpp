@@ -29,6 +29,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "shader/FillShader.h"
 #include "Fleet.h"
 #include "shader/FogShader.h"
+#include "text/Font.h"
 #include "text/FontSet.h"
 #include "FormationPattern.h"
 #include "Galaxy.h"
@@ -95,7 +96,7 @@ namespace {
 
 	StarField background;
 
-	vector<filesystem::path> sources;
+	vector<ContentSource> sources;
 
 	MaskManager maskManager;
 
@@ -104,14 +105,25 @@ namespace {
 
 	ConditionsStore globalConditions;
 
-	void LoadPlugin(TaskQueue &queue, const filesystem::path &path)
+	void LoadPlugin(TaskQueue &queue, const filesystem::path &path, const bool isBaseContent)
 	{
-		const auto *plugin = Plugins::Load(path);
+		const auto *plugin = Plugins::Load(path, isBaseContent);
 		if(!plugin)
 			return;
 
 		if(plugin->enabled)
-			sources.push_back(path);
+		{
+			ContentSource source;
+			source.resourcePath = path;
+			source.dataPath = path / "data";
+			source.imagePath = path / "images";
+			source.soundPath = path / "sounds";
+			// We don't want the Endless Sky plugin loading the core game shaders again since
+			// both core and Endless Sky share the same resources/shaders folder.
+			if (!isBaseContent)
+				source.shaderPath = path / "shaders";
+			sources.push_back(source);
+		}
 
 		// Load the icon for the plugin, if any.
 		auto icon = make_shared<ImageSet>(plugin->name);
@@ -214,11 +226,10 @@ void GameData::LoadShaders()
 	// The found shader files. The first element is the vertex shader,
 	// the second is the fragment shader.
 	map<string, pair<string, string>> loaded;
-	for(const filesystem::path &source : sources)
+	for(const auto &source : sources)
 	{
-		filesystem::path base = source / "shaders";
-		if(Files::Exists(base))
-			for(filesystem::path shaderFile : Files::RecursiveList(base))
+		if(Files::Exists(source.shaderPath))
+			for(filesystem::path shaderFile : Files::RecursiveList(source.shaderPath))
 			{
 				filesystem::path shader = shaderFile;
 #ifdef ES_GLES
@@ -230,7 +241,7 @@ void GameData::LoadShaders()
 				if(shaderFile.extension() == ".gl")
 					shader = shader.parent_path() / shader.stem();
 #endif
-				string name = (shader.parent_path() / shader.stem()).lexically_relative(base).generic_string();
+				string name = (shader.parent_path() / shader.stem()).lexically_relative(source.shaderPath).generic_string();
 				if(shader.extension() == ".vert")
 					loaded[name].first = shaderFile.string();
 				else if(shader.extension() == ".frag")
@@ -254,10 +265,40 @@ void GameData::LoadShaders()
 	BatchShader::Init();
 	RenderBuffer::Init();
 
-	FontSet::Add(Files::Images() / "font/ubuntu14r.png", 14);
-	FontSet::Add(Files::Images() / "font/ubuntu18r.png", 18);
-
 	background.Init(16384, 4096);
+}
+
+
+
+void GameData::LoadFonts()
+{
+	// Iterate backwards so that any fonts overriding the default font takes precedence.
+	for(auto it = sources.rbegin(); it != sources.rend(); ++it)
+	{
+		filesystem::path fonts = it->imagePath / "font";
+		if(Files::Exists(fonts))
+			for(filesystem::path font : Files::RecursiveList(fonts))
+			{
+				if(font.extension() == ".png")
+				{
+					string name = font.stem().generic_string();
+					size_t index = name.find('@');
+					if(index == string::npos)
+					{
+						continue;
+					}
+
+					int size = stoi(name.substr(index + 1));
+					FontSet::Add(font, size);
+				}
+			}
+	}
+	
+	// Validate that required fonts exist.
+	if(!FontSet::Get(14).IsLoaded())
+		throw runtime_error("Unable to find size 14 font!");
+	if(!FontSet::Get(18).IsLoaded())
+		throw runtime_error("Unable to find size 18 font!");
 }
 
 
@@ -277,7 +318,7 @@ bool GameData::IsLoaded()
 
 
 // Get the list of resource sources (i.e. plugin folders).
-const vector<filesystem::path> &GameData::Sources()
+const vector<ContentSource> &GameData::Sources()
 {
 	return sources;
 }
@@ -926,26 +967,38 @@ const Gamerules &GameData::DefaultGamerules()
 void GameData::LoadSources(TaskQueue &queue)
 {
 	sources.clear();
-	sources.push_back(Files::Resources());
+
+	// Core content gets mounted first. This is the content which is required for the
+	// game to function, i.e. main menu interface, sounds, etc.
+	ContentSource core;
+	core.resourcePath = Files::Resources();
+	core.dataPath = core.resourcePath / "data" / "_core";
+	core.imagePath = core.resourcePath / "images" / "_core";
+	core.soundPath = core.resourcePath / "sound" / "_core";
+	core.shaderPath = core.resourcePath / "shaders";
+	sources.push_back(core);
+
+	// Mount the base game as a plugin so total conversions can disable the base content.
+	LoadPlugin(queue, Files::Resources(), true);
 
 	vector<filesystem::path> globalPlugins = Files::ListDirectories(Files::GlobalPlugins());
 	for(const auto &path : globalPlugins)
 		if(Plugins::IsPlugin(path))
-			LoadPlugin(queue, path);
+			LoadPlugin(queue, path, false);
 	// Load unzipped plugins first to give them precedence, then load the zipped plugins.
 	globalPlugins = Files::List(Files::GlobalPlugins());
 	for(const auto &path : globalPlugins)
 		if(path.extension() == ".zip" && Plugins::IsPlugin(path))
-			LoadPlugin(queue, path);
+			LoadPlugin(queue, path, false);
 
 	vector<filesystem::path> localPlugins = Files::ListDirectories(Files::UserPlugins());
 	for(const auto &path : localPlugins)
 		if(Plugins::IsPlugin(path))
-			LoadPlugin(queue, path);
+			LoadPlugin(queue, path, false);
 	localPlugins = Files::List(Files::UserPlugins());
 	for(const auto &path : localPlugins)
 		if(path.extension() == ".zip" && Plugins::IsPlugin(path))
-			LoadPlugin(queue, path);
+			LoadPlugin(queue, path, false);
 }
 
 
@@ -957,7 +1010,7 @@ map<string, shared_ptr<ImageSet>> GameData::FindImages()
 	{
 		// All names will only include the portion of the path that comes after
 		// this directory prefix.
-		filesystem::path directoryPath = source / "images";
+		filesystem::path directoryPath = source.imagePath;
 
 		vector<filesystem::path> imageFiles = Files::RecursiveList(directoryPath);
 		for(auto &path : imageFiles)

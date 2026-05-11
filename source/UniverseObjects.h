@@ -23,6 +23,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Color.h"
 #include "Conversation.h"
 #include "Effect.h"
+#include "Files.h"
 #include "Fleet.h"
 #include "FormationPattern.h"
 #include "Galaxy.h"
@@ -75,7 +76,7 @@ class UniverseObjects {
 	friend class TestData;
 public:
 	// Load game objects from the given directories of definitions.
-	std::shared_future<void> Load(TaskQueue &queue, const std::vector<std::filesystem::path> &sources,
+	std::shared_future<void> Load(TaskQueue &queue, const std::vector<ContentSource> &sources,
 		const PlayerInfo &player, const ConditionsStore *globalConditions, bool debugMode = false);
 	// Determine the fraction of data files read from disk.
 	double GetProgress() const;

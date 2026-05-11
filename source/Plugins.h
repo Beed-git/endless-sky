@@ -76,7 +76,7 @@ struct Plugin {
 class Plugins {
 public:
 	// Attempt to load a plugin at the given path.
-	static const Plugin *Load(const std::filesystem::path &path);
+	static const Plugin *Load(const std::filesystem::path &path, const bool isBaseContent);
 
 	static void LoadSettings();
 	static void Save();

@@ -34,9 +34,6 @@ namespace {
 	filesystem::path resources;
 	filesystem::path config;
 
-	filesystem::path dataPath;
-	filesystem::path imagePath;
-	filesystem::path soundPath;
 	filesystem::path savePath;
 	filesystem::path pilotPath;
 	filesystem::path userPluginPath;
@@ -146,9 +143,7 @@ void Files::Init(const char *const *argv)
 			throw runtime_error("Unable to find the resource directories!");
 		resources = resources.parent_path();
 	}
-	dataPath = resources / "data";
-	imagePath = resources / "images";
-	soundPath = resources / "sounds";
+
 	globalPluginPath = resources / "plugins";
 
 	if(config.empty())
@@ -177,7 +172,7 @@ void Files::Init(const char *const *argv)
 	CreateFolder(userPluginPath);
 
 	// Check that all the directories exist.
-	if(!Exists(dataPath) || !Exists(imagePath) || !Exists(soundPath))
+	if(!Exists(resources / "data") || !Exists(resources / "images") || !Exists(resources / "shaders") || !Exists(resources / "sounds"))
 		throw runtime_error("Unable to find the resource directories!");
 	if(!Exists(savePath))
 		throw runtime_error("Unable to create saves directory!");
@@ -199,27 +194,6 @@ const filesystem::path &Files::Resources()
 const filesystem::path &Files::Config()
 {
 	return config;
-}
-
-
-
-const filesystem::path &Files::Data()
-{
-	return dataPath;
-}
-
-
-
-const filesystem::path &Files::Images()
-{
-	return imagePath;
-}
-
-
-
-const filesystem::path &Files::Sounds()
-{
-	return soundPath;
 }
 
 

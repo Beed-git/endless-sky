@@ -16,13 +16,13 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include "CategoryType.h"
+#include "Files.h"
 #include "Message.h"
 #include "Set.h"
 #include "Shop.h"
 #include "Swizzle.h"
 #include "Trade.h"
 
-#include <filesystem>
 #include <future>
 #include <map>
 #include <memory>
@@ -88,12 +88,13 @@ public:
 	static void CheckReferences();
 	static void LoadSettings();
 	static void LoadShaders();
+	static void LoadFonts();
 	static double GetProgress();
 	// Whether initial game loading is complete (data, sprites and audio are loaded).
 	static bool IsLoaded();
 
 	// Get the list of resource sources (i.e. plugin folders).
-	static const std::vector<std::filesystem::path> &Sources();
+	static const std::vector<ContentSource> &Sources();
 
 	// Get a reference to the UniverseObjects object.
 	static UniverseObjects &Objects();

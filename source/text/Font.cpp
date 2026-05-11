@@ -73,6 +73,13 @@ Font::Font(const filesystem::path &imagePath)
 
 
 
+bool Font::IsLoaded() const
+{
+	return loaded;
+}
+
+
+
 void Font::Load(const filesystem::path &imagePath)
 {
 	// Load the texture.
@@ -84,6 +91,7 @@ void Font::Load(const filesystem::path &imagePath)
 	CalculateAdvances(image);
 	SetUpShader(image.Width() / GLYPHS, image.Height());
 	widthEllipses = WidthRawString("...");
+	loaded = true;
 }
 
 

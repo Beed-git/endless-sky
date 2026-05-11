@@ -197,12 +197,12 @@ bool Plugin::IsValid() const
 
 
 // Attempt to load a plugin at the given path.
-const Plugin *Plugins::Load(const filesystem::path &path)
+const Plugin *Plugins::Load(const filesystem::path &path, const bool isBaseContent)
 {
 	// Get the name of the folder containing the plugin.
 	string name = path.filename().string();
 
-	filesystem::path pluginFile = path / "plugin.txt";
+	filesystem::path pluginFile = path / (isBaseContent ? "endless-sky.txt" : "plugin.txt");
 	string aboutText;
 	string version;
 	set<string> authors;
