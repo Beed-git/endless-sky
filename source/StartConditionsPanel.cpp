@@ -325,7 +325,7 @@ void StartConditionsPanel::Select(StartConditionsList::iterator it)
 	{
 		// The only time we should be here is if there are no scenarios at all.
 		description.Wrap("No valid starting scenarios were defined!\n\n"
-			"Make sure you installed Endless Sky (and any plugins) properly.");
+			"Make sure Endless Sky content (or any other plugins) are enabled properly.");
 		return;
 	}
 
