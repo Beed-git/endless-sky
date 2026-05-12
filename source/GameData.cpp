@@ -116,12 +116,15 @@ namespace {
 			ContentSource source;
 			source.resourcePath = path;
 			source.dataPath = path / "data";
-			source.imagePath = path / "images";
-			source.soundPath = path / "sounds";
-			// We don't want the Endless Sky plugin loading the core game shaders again since
-			// both core and Endless Sky share the same resources/shaders folder.
-			if (!isBaseContent)
+
+			// Only the data folder is mounted for the Endless Sky plugin as the images, sounds,
+			// and shaders are all mounted with the core data before plugins are loaded.
+			if(!isBaseContent)
+			{
+				source.imagePath = path / "images";
+				source.soundPath = path / "sounds";
 				source.shaderPath = path / "shaders";
+			}
 			sources.push_back(source);
 		}
 
@@ -972,9 +975,9 @@ void GameData::LoadSources(TaskQueue &queue)
 	// game to function, i.e. main menu interface, sounds, etc.
 	ContentSource core;
 	core.resourcePath = Files::Resources();
-	core.dataPath = core.resourcePath / "data" / "_core";
-	core.imagePath = core.resourcePath / "images" / "_core";
-	core.soundPath = core.resourcePath / "sound" / "_core";
+	core.dataPath = core.resourcePath / "coredata";
+	core.imagePath = core.resourcePath / "images";
+	core.soundPath = core.resourcePath / "sound";
 	core.shaderPath = core.resourcePath / "shaders";
 	sources.push_back(core);
 

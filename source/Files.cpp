@@ -172,7 +172,8 @@ void Files::Init(const char *const *argv)
 	CreateFolder(userPluginPath);
 
 	// Check that all the directories exist.
-	if(!Exists(resources / "data") || !Exists(resources / "images") || !Exists(resources / "shaders") || !Exists(resources / "sounds"))
+	if(!Exists(resources / "coredata") || !Exists(resources / "data") || !Exists(resources / "images")
+		|| !Exists(resources / "shaders") || !Exists(resources / "sounds"))
 		throw runtime_error("Unable to find the resource directories!");
 	if(!Exists(savePath))
 		throw runtime_error("Unable to create saves directory!");
