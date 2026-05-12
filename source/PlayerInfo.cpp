@@ -27,6 +27,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "text/Format.h"
 #include "GameData.h"
 #include "Gamerules.h"
+#include "GameVersion.h"
 #include "Government.h"
 #include "Logger.h"
 #include "Messages.h"
@@ -4923,6 +4924,18 @@ void PlayerInfo::Save(DataWriter &out) const
 	out.Write("pilot", firstName, lastName);
 	out.Write("original name", originalFirstName, originalLastName);
 	out.Write("date", date.Day(), date.Month(), date.Year());
+
+	out.Write("game version", GameVersion::Running().ToString());
+	out.Write("enabled plugins");
+	out.BeginChild();
+	for(const auto &it : Plugins::Get())
+	{
+		const auto &plugin = it.second;
+		if(plugin.IsValid() && plugin.enabled)
+			out.Write(plugin.name);
+	}
+	out.EndChild();
+
 	if(markedChangesToday)
 		out.Write("marked event changes today");
 	out.Write("system entry method", EntryToString(entry));
@@ -5254,19 +5267,6 @@ void PlayerInfo::Save(DataWriter &out) const
 	out.Write();
 	out.WriteComment("How you began:");
 	startData.Save(out);
-
-	// Write plugins to player's save file for debugging.
-	out.Write();
-	out.WriteComment("Installed plugins:");
-	out.Write("plugins");
-	out.BeginChild();
-	for(const auto &it : Plugins::Get())
-	{
-		const auto &plugin = it.second;
-		if(plugin.IsValid() && plugin.enabled)
-			out.Write(plugin.name);
-	}
-	out.EndChild();
 
 	if(Preferences::Has("Save message log"))
 	{

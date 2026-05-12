@@ -31,6 +31,7 @@ public:
 		unsigned patch = 0, bool fullRelease = true);
 
 	std::string ToString() const;
+	static const GameVersion FromString(std::string text);
 
 
 private:

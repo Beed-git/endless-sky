@@ -27,3 +27,11 @@ string GameVersion::ToString() const
 		+ to_string(numbers[3])
 		+ (fullRelease ? "" : "-alpha");
 }
+
+
+const GameVersion GameVersion::FromString(std::string text)
+{
+
+	return GameVersion(1, 1, 1, 1);
+	// TODO
+}

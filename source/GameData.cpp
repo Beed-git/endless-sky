@@ -107,7 +107,7 @@ namespace {
 
 	void LoadPlugin(TaskQueue &queue, const filesystem::path &path, const bool isBaseContent)
 	{
-		const auto *plugin = Plugins::Load(path, isBaseContent);
+		const Plugin *plugin = isBaseContent ? Plugins::BaseDataPlugin() : Plugins::Load(path);
 		if(!plugin)
 			return;
 
@@ -977,7 +977,7 @@ void GameData::LoadSources(TaskQueue &queue)
 	core.resourcePath = Files::Resources();
 	core.dataPath = core.resourcePath / "coredata";
 	core.imagePath = core.resourcePath / "images";
-	core.soundPath = core.resourcePath / "sound";
+	core.soundPath = core.resourcePath / "sounds";
 	core.shaderPath = core.resourcePath / "shaders";
 	sources.push_back(core);
 

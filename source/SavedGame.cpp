@@ -29,7 +29,14 @@ using namespace std;
 
 
 
-SavedGame::SavedGame(const filesystem::path &path)
+SavedGame::SavedGame() : version(GameVersion::Running())
+{
+
+}
+
+
+
+SavedGame::SavedGame(const filesystem::path &path) : version(GameVersion::Running())
 {
 	Load(path);
 }
@@ -54,6 +61,15 @@ void SavedGame::Load(const filesystem::path &path)
 			name = node.Token(1) + " " + node.Token(2);
 		else if(key == "date" && node.Size() >= 4)
 			date = Date(node.Value(1), node.Value(2), node.Value(3)).ToString();
+		else if(key == "game version" && hasValue)
+			version = GameVersion::FromString(node.Token(1));
+		else if(key == "enabled plugins")
+		{
+			for(const DataNode &child  : node)
+			{
+				plugins.push_back(child.Token(0));
+			}
+		}
 		else if(key == "system" && hasValue)
 		{
 			system = node.Token(1);

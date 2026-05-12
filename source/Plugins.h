@@ -75,8 +75,10 @@ struct Plugin {
 // This object is updated by toggling plugins in the Preferences UI.
 class Plugins {
 public:
+	// Get the plugin which holds the base game data.
+	static const Plugin *BaseDataPlugin();
 	// Attempt to load a plugin at the given path.
-	static const Plugin *Load(const std::filesystem::path &path, const bool isBaseContent);
+	static const Plugin *Load(const std::filesystem::path &path);
 
 	static void LoadSettings();
 	static void Save();

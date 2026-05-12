@@ -19,6 +19,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "DataNode.h"
 #include "DataWriter.h"
 #include "Files.h"
+#include "GameVersion.h"
 #include "Logger.h"
 #include "Set.h"
 
@@ -195,14 +196,30 @@ bool Plugin::IsValid() const
 }
 
 
+// Get the plugin which holds the base game data.
+const Plugin *Plugins::BaseDataPlugin()
+{
+	string name = "Endless Sky";
+
+	auto *plugin = plugins.Get(name);
+	if(!plugin)
+	{
+		plugin->name = std::move(name);
+		plugin->version = GameVersion::Running().ToString();
+		plugin->aboutText = "The base game content for Endless Sky.";
+	}
+	return plugin;
+}
+
+
 
 // Attempt to load a plugin at the given path.
-const Plugin *Plugins::Load(const filesystem::path &path, const bool isBaseContent)
+const Plugin *Plugins::Load(const filesystem::path &path)
 {
 	// Get the name of the folder containing the plugin.
 	string name = path.filename().string();
 
-	filesystem::path pluginFile = path / (isBaseContent ? "endless-sky.txt" : "plugin.txt");
+	filesystem::path pluginFile = path / "plugin.txt";
 	string aboutText;
 	string version;
 	set<string> authors;

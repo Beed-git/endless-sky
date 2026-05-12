@@ -15,6 +15,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "GameVersion.h"
+
 #include <filesystem>
 #include <string>
 
@@ -29,7 +31,7 @@ class Sprite;
 // to be logic for copying one PlayerInfo into another.
 class SavedGame {
 public:
-	SavedGame() = default;
+	SavedGame();
 	explicit SavedGame(const std::filesystem::path &path);
 
 	void Load(const std::filesystem::path &path);
@@ -46,6 +48,9 @@ public:
 	const std::string &GetPlanet() const;
 	const std::string &GetPlayTime() const;
 
+	const GameVersion &GetGameVersion() const;
+	const std::vector<std::string> &GetPlugins() const;
+
 	const Sprite *ShipSprite() const;
 	const std::string &ShipName() const;
 
@@ -60,6 +65,9 @@ private:
 	std::string system;
 	std::string planet;
 	std::string playTime;
+
+	GameVersion version;
+	std::vector<std::string> plugins;
 
 	const Sprite *shipSprite = nullptr;
 	std::string shipName;
