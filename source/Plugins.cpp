@@ -202,7 +202,7 @@ const Plugin *Plugins::BaseDataPlugin()
 	string name = "Endless Sky";
 
 	auto *plugin = plugins.Get(name);
-	if(!plugin)
+	if(!plugin || !plugin->IsValid())
 	{
 		plugin->name = std::move(name);
 		plugin->version = GameVersion::Running().ToString();

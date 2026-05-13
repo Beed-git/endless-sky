@@ -15,6 +15,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "GameVersion.h"
 
+#include <charconv>
+
 using namespace std;
 
 
@@ -31,7 +33,24 @@ string GameVersion::ToString() const
 
 const GameVersion GameVersion::FromString(std::string text)
 {
+	array<unsigned, 4> version = {};
+	bool fullRelease = !text.ends_with("-alpha");
 
-	return GameVersion(1, 1, 1, 1);
-	// TODO
+	size_t start = 0;
+	size_t next = 0;
+	for(int i = 0; i < 4; ++i)
+	{
+		next = text.find('.', start);
+
+		unsigned value = 0;
+		auto [ptr, ec] = from_chars(text.data() + start, text.data() + (next == string::npos ? text.length() : next), value);
+		version[i] = value;
+
+		if(ec != std::errc() || next == string::npos || next + 1 > text.length())
+			break;
+
+		start = next + 1;
+	}
+
+	return GameVersion(version[0], version[1], version[2], version[3], fullRelease);
 }
