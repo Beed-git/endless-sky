@@ -15,9 +15,18 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "GameVersion.h"
 
+#include <algorithm>
 #include <charconv>
 
 using namespace std;
+
+
+
+bool GameVersion::operator==(const GameVersion &other) const
+{
+	return equal(numbers.begin(), numbers.end(), other.numbers.begin())
+		&& fullRelease == other.fullRelease;
+}
 
 
 
@@ -29,6 +38,7 @@ string GameVersion::ToString() const
 		+ to_string(numbers[3])
 		+ (fullRelease ? "" : "-alpha");
 }
+
 
 
 const GameVersion GameVersion::FromString(std::string text)

@@ -440,6 +440,13 @@ bool LoadPanel::Click(int x, int y, MouseButton button, int clicks)
 	else
 		return false;
 
+	if(!loadedInfo.VersionsMatch())
+		GetUI().Push(DialogPanel::CallFunctionIfOk([]() {}, "Hello!", false));
+
+	vector<string> missingPlugins = loadedInfo.MissingPlugins();
+	if(!missingPlugins.empty())
+		GetUI().Push(DialogPanel::CallFunctionIfOk([]() {}, "Hello!", false));
+
 	if(!selectedFile.empty())
 		loadedInfo.Load(Files::Saves() / selectedFile);
 

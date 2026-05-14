@@ -66,7 +66,6 @@ private:
 	void DeletePilot(const std::string &);
 	void DeleteSave();
 
-
 private:
 	PlayerInfo &player;
 	SavedGame loadedInfo;

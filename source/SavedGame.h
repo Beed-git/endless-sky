@@ -16,9 +16,11 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include "GameVersion.h"
+#include "Plugins.h"
 
 #include <filesystem>
 #include <string>
+#include <vector>
 
 class Sprite;
 
@@ -38,6 +40,8 @@ public:
 	const std::filesystem::path &Path() const;
 	std::string Identifier() const;
 	bool IsLoaded() const;
+	bool VersionsMatch() const;
+	std::vector<std::string> MissingPlugins() const;
 	void Clear();
 
 	const std::string &Name() const;
@@ -53,7 +57,6 @@ public:
 
 	const Sprite *ShipSprite() const;
 	const std::string &ShipName() const;
-
 
 private:
 	std::filesystem::path path;

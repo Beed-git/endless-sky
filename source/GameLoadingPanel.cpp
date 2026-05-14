@@ -57,7 +57,13 @@ void GameLoadingPanel::Step()
 		// Set the game's initial internal state.
 		GameData::FinishLoading();
 
-		player.LoadRecent();
+		player.Clear();
+
+		std::string recentPath = Files::Read(Files::Config() / "recent.txt");
+		// Trim trailing whitespace (including newlines) from the path.
+		while(!recentPath.empty() && recentPath.back() <= ' ')
+			recentPath.pop_back();
+		SavedGame recent(recentPath);
 
 		// All sprites with collision masks should also have their 1x scaled versions, so create
 		// any additional scaled masks from the default one.
@@ -66,7 +72,7 @@ void GameLoadingPanel::Step()
 		GetUI().Pop(this);
 		if(conversation.IsEmpty())
 		{
-			GetUI().Push(new MenuPanel(player, gamePanels));
+			GetUI().Push(new MenuPanel(player, recent, gamePanels));
 			GetUI().Push(new MenuAnimationPanel());
 		}
 		else

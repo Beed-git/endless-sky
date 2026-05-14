@@ -17,13 +17,13 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "audio/Audio.h"
 #include "Command.h"
+#include "DialogPanel.h"
 #include "Files.h"
 #include "text/Font.h"
 #include "text/FontSet.h"
 #include "text/Format.h"
 #include "GameData.h"
 #include "GamerulesPanel.h"
-#include "Information.h"
 #include "Interface.h"
 #include "LoadPanel.h"
 #include "Logger.h"
@@ -46,7 +46,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <stdexcept>
+#include <filesystem>
 
 using namespace std;
 
@@ -58,8 +58,9 @@ namespace {
 
 
 
-MenuPanel::MenuPanel(PlayerInfo &player, UI &gamePanels)
-	: player(player), gamePanels(gamePanels), mainMenuUi(GameData::Interfaces().Get("main menu"))
+
+MenuPanel::MenuPanel(PlayerInfo &player, optional<SavedGame> recentSave, UI &gamePanels)
+	: player(player), recentSave(recentSave), gamePanels(gamePanels), mainMenuUi(GameData::Interfaces().Get("main menu"))
 {
 	assert(GameData::IsLoaded() && "MenuPanel should only be created after all data is fully loaded");
 	SetIsFullScreen(true);
@@ -105,6 +106,54 @@ MenuPanel::MenuPanel(PlayerInfo &player, UI &gamePanels)
 
 	// When the player is in the menu, pause the game sounds.
 	Audio::Pause();
+
+	if(recentSave)
+	{
+		SavedGame save = recentSave.value();
+		info.SetCondition("load recent");
+		info.SetString("pilot", save.Name());
+		info.SetSprite("ship sprite", save.ShipSprite());
+		info.SetString("ship", save.ShipName());
+		info.SetString("system", save.GetSystem());
+		info.SetString("planet", save.GetPlanet());
+		info.SetString("credits", save.Credits());
+		info.SetString("date", save.GetDate());
+		info.SetString("playtime", save.GetPlayTime());
+	}
+	else
+	{
+		if(player.IsLoaded() && !player.IsDead())
+		{
+			info.SetCondition("pilot loaded");
+			info.SetString("pilot", player.FirstName() + " " + player.LastName());
+			if(player.Flagship())
+			{
+				const Ship &flagship = *player.Flagship();
+				info.SetSprite("ship sprite", flagship.GetSprite());
+				info.SetString("ship", flagship.GivenName());
+			}
+			if(player.GetSystem())
+				info.SetString("system", player.GetSystem()->DisplayName());
+			if(player.GetPlanet())
+				info.SetString("planet", player.GetPlanet()->DisplayName());
+			info.SetString("credits", Format::AbbreviatedNumber(player.Accounts().Credits()));
+			info.SetString("date", player.GetDate().ToString());
+			info.SetString("playtime", Format::PlayTime(player.GetPlayTime()));
+		}
+		else if(player.IsLoaded())
+		{
+			info.SetCondition("pilot dead");
+			info.SetString("pilot", player.FirstName() + " " + player.LastName());
+			info.SetString("ship", "You have died.");
+		}
+		else
+		{
+			info.SetCondition("no pilot loaded");
+			info.SetString("pilot", "No Pilot Loaded");
+		}
+		if(player.Pilot() && !player.Pilot()->GetGamerules().LockGamerules())
+			info.SetCondition("gamerules unlocked");
+	}
 }
 
 
@@ -143,39 +192,6 @@ void MenuPanel::Draw()
 	glClear(GL_COLOR_BUFFER_BIT);
 	GameData::Background().Draw(Point());
 
-	Information info;
-	if(player.IsLoaded() && !player.IsDead())
-	{
-		info.SetCondition("pilot loaded");
-		info.SetString("pilot", player.FirstName() + " " + player.LastName());
-		if(player.Flagship())
-		{
-			const Ship &flagship = *player.Flagship();
-			info.SetSprite("ship sprite", flagship.GetSprite());
-			info.SetString("ship", flagship.GivenName());
-		}
-		if(player.GetSystem())
-			info.SetString("system", player.GetSystem()->DisplayName());
-		if(player.GetPlanet())
-			info.SetString("planet", player.GetPlanet()->DisplayName());
-		info.SetString("credits", Format::AbbreviatedNumber(player.Accounts().Credits()));
-		info.SetString("date", player.GetDate().ToString());
-		info.SetString("playtime", Format::PlayTime(player.GetPlayTime()));
-	}
-	else if(player.IsLoaded())
-	{
-		info.SetCondition("pilot dead");
-		info.SetString("pilot", player.FirstName() + " " + player.LastName());
-		info.SetString("ship", "You have died.");
-	}
-	else
-	{
-		info.SetCondition("no pilot loaded");
-		info.SetString("pilot", "No Pilot Loaded");
-	}
-	if(player.Pilot() && !player.Pilot()->GetGamerules().LockGamerules())
-		info.SetCondition("gamerules unlocked");
-
 	GameData::Interfaces().Get("menu background")->Draw(info, this);
 	mainMenuUi->Draw(info, this);
 	GameData::Interfaces().Get("menu player info")->Draw(info, this);
@@ -188,12 +204,44 @@ void MenuPanel::Draw()
 
 bool MenuPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool isNewPress)
 {
-	if(player.IsLoaded() && (key == 'e' || command.Has(Command::MENU)))
+	if(key == 'e' || command.Has(Command::MENU))
 	{
-		gamePanels.CanSave(true);
-		GetUI().PopThrough(this);
-		return true;
+		if(player.IsLoaded())
+		{
+			gamePanels.CanSave(true);
+			GetUI().PopThrough(this);
+			return true;
+		}
+		else if(recentSave)
+		{
+			SavedGame save = recentSave.value();
+
+			bool versionsMatch = save.VersionsMatch();
+			vector<string> missingPlugins = save.MissingPlugins();
+
+			string error = "";
+			if(!versionsMatch)
+				error += "This save was last loaded on " + save.GetGameVersion().ToString()
+				+ " but the current version is " + GameVersion::Running().ToString() + ".\n\n";
+
+			if(!missingPlugins.empty())
+			{
+				error += "These plugins are missing\n";
+				for(string plugin : missingPlugins)
+					error += " - " + plugin + '\n';
+			}
+
+			if(!error.empty())
+			{
+				error += "\nDo you wish to continue?";
+				GetUI().Push(DialogPanel::CallFunctionIfOk(this, &MenuPanel::LoadCallback, error));
+			}
+			else
+				LoadCallback();
+			return true;
+		}
 	}
+
 	else if(key == 'r' && player.IsLoaded() && player.IsDead())
 	{
 		// First, make sure the previous MainPanel has been deleted.
@@ -215,7 +263,7 @@ bool MenuPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		GetUI().Push(new LoadPanel(player, gamePanels));
 	else if(key == 'n' && !player.IsLoaded())
 	{
-		// If no player is loaded, the "Enter Ship" button becomes "New Pilot."
+		// If no player is loaded, the "Load Recent" button becomes "New Pilot."
 		// Request that the player chooses a start scenario.
 		// StartConditionsPanel also handles the case where there's no scenarios.
 		GetUI().Push(new StartConditionsPanel(player, gamePanels, GameData::StartOptions(), nullptr));
@@ -284,4 +332,20 @@ void MenuPanel::DrawCredits() const
 		}
 		y += 20;
 	}
+}
+
+
+
+// Load save callback.
+void MenuPanel::LoadCallback()
+{
+	filesystem::path path = recentSave.value().Path();
+	player.Load(path, PilotProfile::GetProfile(Files::NameNoExtension(path)));
+
+	// TODO: Don't error
+	if(!player.IsLoaded())
+		throw runtime_error("Failed to load save");
+
+	gamePanels.CanSave(true);
+	GetUI().PopThrough(this);
 }

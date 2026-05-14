@@ -139,6 +139,27 @@ bool SavedGame::IsLoaded() const
 
 
 
+bool SavedGame::VersionsMatch() const
+{
+	return version == GameVersion::Running();
+}
+
+
+
+vector<string> SavedGame::MissingPlugins() const
+{
+	vector<string> missing;
+	for(string name : plugins)
+	{
+		const Plugin *plugin = Plugins::Get().Find(name);
+		if(plugin == nullptr || !plugin->IsValid())
+			missing.push_back(name);
+	}
+	return missing;
+}
+
+
+
 void SavedGame::Clear()
 {
 	path.clear();
@@ -209,4 +230,11 @@ const Sprite *SavedGame::ShipSprite() const
 const string &SavedGame::ShipName() const
 {
 	return shipName;
+}
+
+
+
+const GameVersion &SavedGame::GetGameVersion() const
+{
+	return version;
 }

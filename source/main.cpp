@@ -347,7 +347,7 @@ void GameLoop(PlayerInfo &player, TaskQueue &queue, const Conversation &conversa
 			{
 				// User pressed the Menu key.
 				menuPanels.Push(shared_ptr<Panel>(
-					new MenuPanel(player, gamePanels)));
+					new MenuPanel(player, nullopt, gamePanels)));
 				UI::PlaySound(UI::UISound::NORMAL);
 			}
 			else if(event.type == SDL_QUIT)

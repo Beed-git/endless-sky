@@ -30,6 +30,8 @@ public:
 	constexpr GameVersion(unsigned major, unsigned minor, unsigned release,
 		unsigned patch = 0, bool fullRelease = true);
 
+	bool operator==(const GameVersion &other) const;
+
 	std::string ToString() const;
 	static const GameVersion FromString(std::string text);
 
