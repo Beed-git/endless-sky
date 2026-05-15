@@ -72,7 +72,7 @@ void GameLoadingPanel::Step()
 		GetUI().Pop(this);
 		if(conversation.IsEmpty())
 		{
-			GetUI().Push(new MenuPanel(player, recent, gamePanels));
+			GetUI().Push(new MenuPanel(player, Files::Exists(recentPath) ? std::optional<SavedGame>(recent) : std::nullopt, gamePanels));
 			GetUI().Push(new MenuAnimationPanel());
 		}
 		else
