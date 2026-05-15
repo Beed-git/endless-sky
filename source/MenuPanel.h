@@ -40,8 +40,8 @@ public:
 	virtual void Step() override;
 	virtual void Draw() override;
 
-	// Load save callback.
-	void LoadCallback();
+	// Load recent save callback.
+	void LoadRecentCallback();
 
 protected:
 	// Only override the ones you need; the default action is to return false.

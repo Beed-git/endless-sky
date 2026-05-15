@@ -42,6 +42,7 @@ public:
 	bool IsLoaded() const;
 	bool VersionsMatch() const;
 	std::vector<std::string> MissingPlugins() const;
+	std::string CreateWarningMessage() const;
 	void Clear();
 
 	const std::string &Name() const;

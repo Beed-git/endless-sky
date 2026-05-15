@@ -321,7 +321,10 @@ interface "main menu"
 
 	sprite "_menu/side panel"
 		center 360 0
-	
+	visible if "load recent"
+	button e "_Load Recent"
+		center 435 155
+		dimensions 90 30
 	visible if "pilot loaded"
 	button e "_Enter Ship"
 		center 435 155

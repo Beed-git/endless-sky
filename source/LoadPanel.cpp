@@ -289,12 +289,13 @@ bool LoadPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 	{
 		// Is the selected file a snapshot or the pilot's main file?
 		string fileName = selectedFile.substr(selectedFile.rfind('/') + 1);
+
 		if(fileName == selectedPilot->Identifier() + ".txt")
-			LoadCallback();
+			ShowWarningThenLoadCallback();
 		else
 		{
 			sound = UI::UISound::NONE;
-			GetUI().Push(DialogPanel::CallFunctionIfOk(this, &LoadPanel::LoadCallback,
+			GetUI().Push(DialogPanel::CallFunctionIfOk(this, &LoadPanel::ShowWarningThenLoadCallback,
 				"If you load this snapshot, it will overwrite your current game. "
 				"Any progress will be lost, unless you have saved other snapshots. "
 				"Are you sure you want to do that?"));
@@ -439,13 +440,6 @@ bool LoadPanel::Click(int x, int y, MouseButton button, int clicks)
 	}
 	else
 		return false;
-
-	if(!loadedInfo.VersionsMatch())
-		GetUI().Push(DialogPanel::CallFunctionIfOk([]() {}, "Hello!", false));
-
-	vector<string> missingPlugins = loadedInfo.MissingPlugins();
-	if(!missingPlugins.empty())
-		GetUI().Push(DialogPanel::CallFunctionIfOk([]() {}, "Hello!", false));
 
 	if(!selectedFile.empty())
 		loadedInfo.Load(Files::Saves() / selectedFile);
@@ -617,4 +611,18 @@ void LoadPanel::DeleteSave()
 		loadedInfo.Load(Files::Saves() / selectedFile);
 		sideHasFocus = false;
 	}
+}
+
+
+
+void LoadPanel::ShowWarningThenLoadCallback()
+{
+	string error = loadedInfo.CreateWarningMessage();
+	if(!error.empty())
+	{
+		error += "\nDo you wish to continue?";
+		GetUI().Push(DialogPanel::CallFunctionIfOk(this, &LoadPanel::LoadCallback, error));
+	}
+	else
+		LoadCallback();
 }

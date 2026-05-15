@@ -62,6 +62,7 @@ private:
 	void WriteSnapshot(const std::filesystem::path &sourceFile, const std::filesystem::path &snapshotName);
 	// Load snapshot callback.
 	void LoadCallback();
+	void ShowWarningThenLoadCallback();
 	// Delete callbacks.
 	void DeletePilot(const std::string &);
 	void DeleteSave();

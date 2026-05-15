@@ -216,28 +216,15 @@ bool MenuPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		{
 			SavedGame save = recentSave.value();
 
-			bool versionsMatch = save.VersionsMatch();
-			vector<string> missingPlugins = save.MissingPlugins();
-
-			string error = "";
-			if(!versionsMatch)
-				error += "This save was last loaded on " + save.GetGameVersion().ToString()
-				+ " but the current version is " + GameVersion::Running().ToString() + ".\n\n";
-
-			if(!missingPlugins.empty())
-			{
-				error += "These plugins are missing\n";
-				for(string plugin : missingPlugins)
-					error += " - " + plugin + '\n';
-			}
-
+			string error = save.CreateWarningMessage();
+			
 			if(!error.empty())
 			{
 				error += "\nDo you wish to continue?";
-				GetUI().Push(DialogPanel::CallFunctionIfOk(this, &MenuPanel::LoadCallback, error));
+				GetUI().Push(DialogPanel::CallFunctionIfOk(this, &MenuPanel::LoadRecentCallback, error));
 			}
 			else
-				LoadCallback();
+				LoadRecentCallback();
 			return true;
 		}
 	}
@@ -336,15 +323,11 @@ void MenuPanel::DrawCredits() const
 
 
 
-// Load save callback.
-void MenuPanel::LoadCallback()
+// Load recent save callback.
+void MenuPanel::LoadRecentCallback()
 {
 	filesystem::path path = recentSave.value().Path();
 	player.Load(path, PilotProfile::GetProfile(Files::NameNoExtension(path)));
-
-	// TODO: Don't error
-	if(!player.IsLoaded())
-		throw runtime_error("Failed to load save");
 
 	gamePanels.CanSave(true);
 	GetUI().PopThrough(this);

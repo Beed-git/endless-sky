@@ -152,7 +152,7 @@ vector<string> SavedGame::MissingPlugins() const
 	for(string name : plugins)
 	{
 		const Plugin *plugin = Plugins::Get().Find(name);
-		if(plugin == nullptr || !plugin->IsValid())
+		if(plugin == nullptr || !plugin->IsValid() || !plugin->enabled)
 			missing.push_back(name);
 	}
 	return missing;
@@ -174,6 +174,9 @@ void SavedGame::Clear()
 
 	shipSprite = nullptr;
 	shipName.clear();
+
+	version = GameVersion::Running();
+	plugins.clear();
 }
 
 
@@ -237,4 +240,27 @@ const string &SavedGame::ShipName() const
 const GameVersion &SavedGame::GetGameVersion() const
 {
 	return version;
+}
+
+
+
+string SavedGame::CreateWarningMessage() const
+{
+	bool versionsMatch = VersionsMatch();
+	vector<string> missingPlugins = MissingPlugins();
+
+	string error = "";
+	if(!missingPlugins.empty())
+	{
+		error += "These plugins are missing or not enabled:\n";
+		for(string plugin : missingPlugins)
+			error += " - " + plugin + "\n";
+		error += '\n';
+	}
+
+	if(!versionsMatch)
+		error += "This save was last loaded on " + version.ToString()
+		+ " but the current version is " + GameVersion::Running().ToString() + ".\n";
+
+	return error;
 }
